@@ -55,6 +55,7 @@ namespace Server
                     if (_receivedStr.IndexOf("[GET]") >= 0)
                     {
                         _getfileName = _receivedStr.Substring(5, _receivedStr.Length - 10);
+                        _getfileName = _getfileName.TrimEnd('\0');
                         Console.WriteLine("Server received [GET] request for file: " + _getfileName);
                         getFileForSendingToClient(state);
                     }
@@ -62,6 +63,7 @@ namespace Server
                     {
                         Console.WriteLine("_receivedStr.IndexOf([SEND])." + _receivedStr.IndexOf("[SEND]"));
                         _sendfileName = _receivedStr.Substring(6, _receivedStr.Length - 11);
+                        _sendfileName = _sendfileName.TrimEnd('\0');
                         Console.WriteLine("Server received [SEND] request for file: " + _sendfileName);
                         saveFileSentFromClient();
                     }
@@ -111,6 +113,7 @@ namespace Server
 
             File.WriteAllText(filePath, _receiveFile);
         }
+
 
 
 

@@ -40,10 +40,14 @@ namespace Client
             int port = Convert.ToInt32(maskedTextBoxPort.Text);
             client = new Client();
 
-            client.connect(ip, port);
+            if (client.connect(ip, port))
+            {
+                buttonBrowse.Enabled = true;
+                listBoxServerFiles.Enabled = true;
+                listBoxServerFiles.Items.Clear();
+            }
 
-            buttonBrowse.Enabled = true;
-            listBoxServerFiles.Enabled = true;
+            
 
 
             //client.write();

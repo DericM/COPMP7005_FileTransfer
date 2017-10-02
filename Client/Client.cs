@@ -27,6 +27,8 @@ namespace Client
                 stream = tcpclnt.GetStream();
 
                 Console.WriteLine("Connected");
+
+
                 return true;
             }
 
@@ -57,7 +59,8 @@ namespace Client
 
                 String header = "[SEND]" + Path.GetFileName(filepath);
                 buffer = new byte[1024];
-                Array.Copy(buffer, Encoding.UTF8.GetBytes(header), header.Length);
+                Array.Copy(Encoding.UTF8.GetBytes(header), buffer, header.Length);
+                Console.WriteLine("Client SEND header: " + Encoding.Default.GetString(buffer));
                 stream.Write(buffer, 0, 1024);
 
                 return true;
