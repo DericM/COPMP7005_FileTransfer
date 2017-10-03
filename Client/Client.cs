@@ -10,25 +10,31 @@ namespace Client
 {
     class Client
     {
-        TcpClient tcpclnt;
-        Stream stream;
+        TcpClient commandClnt;
+        TcpClient transferClnt;
+        Stream commandStream;
+        Stream transferStream;
+        
 
 
         public bool connect(String ip, int port)
         {
             try
             {
-                tcpclnt = new TcpClient();
+                commandClnt = new TcpClient();
+                transferClnt = new TcpClient();
                 Console.WriteLine("Connecting.....");
-                
-                tcpclnt.Connect(ip, port);
-                // use the ipaddress as in the server program
 
-                stream = tcpclnt.GetStream();
+                commandClnt.Connect(ip, 7005);
+                transferClnt.Connect(ip, 7004);
+
+                commandStream = commandClnt.GetStream();
+                transferStream = transferClnt.GetStream();
 
                 Console.WriteLine("Connected");
 
-
+                requestListFromServer();
+                
                 return true;
             }
 
@@ -47,21 +53,22 @@ namespace Client
 
             try
             {
+                String header = "<FILENAME>" + Path.GetFileName(filepath) + "</FILENAME>";
+                transferStream.Write(Encoding.UTF8.GetBytes(header), 0, header.Length);
+
                 using (Stream source = File.OpenRead(filepath))
                 {
                     buffer = new byte[1024];
                     int bytesRead;
                     while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        stream.Write(buffer, 0, 1024);
+                        transferStream.Write(buffer, 0, bytesRead);
                     }
                 }
 
-                String header = "[SEND]" + Path.GetFileName(filepath);
-                buffer = new byte[1024];
-                Array.Copy(Encoding.UTF8.GetBytes(header), buffer, header.Length);
-                Console.WriteLine("Client SEND header: " + Encoding.Default.GetString(buffer));
-                stream.Write(buffer, 0, 1024);
+                transferStream.Write(Encoding.UTF8.GetBytes("<EOF>"), 0, 5);
+
+                requestListFromServer();
 
                 return true;
             }
@@ -72,70 +79,27 @@ namespace Client
             }
         }
 
-        public bool write(String data)
+
+
+        public void requestListFromServer()
         {
-            try
-            {
-                String str = "[GET]00_ship_sizes.txt<EOF>";// Console.ReadLine();
-                
-
-                ASCIIEncoding asen = new ASCIIEncoding();
-                byte[] ba = asen.GetBytes(str);
-                Console.WriteLine("Transmitting.....");
-
-                stream.Write(ba, 0, ba.Length);
-
-                
-                return true;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error..... " + e.StackTrace);
-                return false;
-            }
+            String header = "<FILELIST><EOF>";
+            commandStream.Write(Encoding.UTF8.GetBytes(header), 0, header.Length);
         }
 
-        public bool getFileFromServer(String filename)
+        public void requestFileFromServer(String filename)
         {
-            try
-            {
-                return false;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error..... " + e.StackTrace);
-                return false;
-            }
+            String header = "<FILENAME>" + filename + "</FILENAME><EOF>";
+            commandStream.Write(Encoding.UTF8.GetBytes(header), 0, header.Length);
         }
-
-        public bool read()
-        {
-            try
-            {
-                byte[] bb = new byte[100];
-                int k = stream.Read(bb, 0, 100);
-
-                Console.WriteLine("Bytes read:" + k);
-
-                for (int i = 0; i < k; i++)
-                    Console.Write(Convert.ToChar(bb[i]));
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error..... " + e.StackTrace);
-                return false;
-            }
-        }
-
 
         public bool disconnect()
         {
             try
             {
 
-                tcpclnt.Close();
+                commandStream.Close();
+                transferStream.Close();
                 return true;
             }
             catch (Exception e)

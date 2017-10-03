@@ -1,24 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
+using TcpLib;
 
 namespace Client
 {
     public partial class ClientForm : Form
     {
 
+        private TcpServer FRServidor;
+        private FileReceiver FRProvider;
+
+        private TcpServer LRServidor;
+        private ListReceiver LRProvider;
 
         public ClientForm()
         {
             InitializeComponent();
         }
+
+        private void ClientForm_Load(object sender, EventArgs e)
+        {
+            Thread FRThread = new Thread(FileReceiverThread);
+            FRThread.Start();
+            Thread LRThread = new Thread(ListReceiverThread);
+            LRThread.Start();
+        }
+
+        private void FileReceiverThread()
+        {
+            FRProvider = new FileReceiver();
+            FRServidor = new TcpServer(FRProvider, 7006);
+            FRServidor.Start();
+        }
+
+        private void ListReceiverThread()
+        {
+            LRProvider = new ListReceiver(this);
+            LRServidor = new TcpServer(LRProvider, 7007);
+            LRServidor.Start();
+        }
+
+
 
         private void maskedTextBoxIPAddress_Validating(object sender, CancelEventArgs e)
         {
@@ -46,13 +73,7 @@ namespace Client
                 listBoxServerFiles.Enabled = true;
                 listBoxServerFiles.Items.Clear();
             }
-
             
-
-
-            //client.write();
-            //client.read();
-            //client.disconnect();
         }
 
         private void buttonUpload_Click(object sender, EventArgs e)
@@ -71,7 +92,7 @@ namespace Client
 
         private void buttonDownload_Click(object sender, EventArgs e)
         {
-            //client.getFileFromServer(listBoxServerFiles.SelectedItem.ToString);
+            client.requestFileFromServer(listBoxServerFiles.SelectedItem.ToString());
         }
 
         private void listBoxServerFiles_SelectedIndexChanged(object sender, EventArgs e)
@@ -79,10 +100,27 @@ namespace Client
             buttonDownload.Enabled = true;
         }
 
+        private void ClientForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            FRServidor.Stop();
+            LRServidor.Stop();
+            client.disconnect();
+        }
 
-        
-        
+        public void updateList(String files)
+        {
+            Console.WriteLine(files);
+            List<String> listfiles = files.Split(',').ToList();
+            this.Invoke((MethodInvoker)(() => listBoxServerFiles.Items.Clear()));
+            foreach (String element in listfiles)
+            {
+                this.Invoke((MethodInvoker)(() => listBoxServerFiles.Items.Add(element)));
+            }
+        }
 
-
+        private void buttonRefresh_Click(object sender, EventArgs e)
+        {
+            client.requestListFromServer();
+        }
     }
 }

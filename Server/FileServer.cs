@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Net.Sockets;
+using System.Net;
 
 namespace Server
 {
@@ -16,9 +18,9 @@ namespace Server
     public class FileServer : TcpServiceProvider
     {
         private string _receivedStr;
-        private string _receiveFile;
-        private string _getfileName;
-        private string _sendfileName;
+
+        TcpClient filelistclnt;
+        TcpClient fileTransferClnt;
 
         public override object Clone()
         {
@@ -30,91 +32,114 @@ namespace Server
             _receivedStr = "";
             if (!state.Write(Encoding.UTF8.GetBytes("Hello World!\r\n"), 0, 14))
                 state.EndConnection();
+
+            String ip = ((IPEndPoint)state.RemoteEndPoint).Address.ToString();
+
+            filelistclnt = new TcpClient();
+            filelistclnt.Connect(ip, 7007);
+
+            fileTransferClnt = new TcpClient();
+            fileTransferClnt.Connect(ip, 7006);
+
             //if write fails... then close connection
         }
-
+        
 
         public override void OnReceiveData(ConnectionState state)
         {
+            
             byte[] buffer = new byte[1024];
-            int readBytes = 0;
             while (state.AvailableData > 0)
             {
-                Console.WriteLine("Server Read.");
-                readBytes += state.Read(buffer, 0, 1024);
-
-                if (readBytes != 1024)
-                {
-                    Console.WriteLine("Server readBytes: " + readBytes);
-                }
-
-                if (readBytes >= 1024)
+                int readBytes = state.Read(buffer, 0, 1024);
+                if (readBytes > 0)
                 {
                     _receivedStr += Encoding.UTF8.GetString(buffer, 0, readBytes);
-                    //Console.WriteLine("Server received: " + _receivedStr);
-                    if (_receivedStr.IndexOf("[GET]") >= 0)
+                    if (_receivedStr.IndexOf("<EOF>") >= 0)
                     {
-                        _getfileName = _receivedStr.Substring(5, _receivedStr.Length - 10);
-                        _getfileName = _getfileName.TrimEnd('\0');
-                        Console.WriteLine("Server received [GET] request for file: " + _getfileName);
-                        getFileForSendingToClient(state);
-                    }
-                    else if (_receivedStr.IndexOf("[SEND]") >= 0)
-                    {
-                        Console.WriteLine("_receivedStr.IndexOf([SEND])." + _receivedStr.IndexOf("[SEND]"));
-                        _sendfileName = _receivedStr.Substring(6, _receivedStr.Length - 11);
-                        _sendfileName = _sendfileName.TrimEnd('\0');
-                        Console.WriteLine("Server received [SEND] request for file: " + _sendfileName);
-                        saveFileSentFromClient();
-                    }
-                    else if (_receivedStr.IndexOf("[LIST]") >= 0)
-                    {
-                        Console.WriteLine("Server received [LIST] request for all file names.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Server received Data from client.");
-                        _receiveFile += _receivedStr;
-                    }
+                        if (_receivedStr.IndexOf("<FILENAME>") >= 0)
+                        {
+                            int headerStart = _receivedStr.IndexOf("<FILENAME>");
+                            int filenameStart = headerStart + 10;
+                            int filenameEnd = _receivedStr.IndexOf("</FILENAME>");
+                            int headerEnd = filenameEnd + 11;
+                            int filenameLength = filenameEnd - filenameStart;
 
-                    //Console.WriteLine("Server write: " + _receivedStr);
-                    //state.Write(Encoding.UTF8.GetBytes(_receivedStr), 0, _receivedStr.Length);
-                    _receivedStr = "";
-                    readBytes = 0;
+                            String filename = _receivedStr.Substring(filenameStart, filenameLength);
+                            getFileForSendingToClient(filename);
+
+                            int eofEnd = _receivedStr.IndexOf("<EOF>") + 4;
+                            _receivedStr = _receivedStr.Remove(0, eofEnd);
+                        }
+
+                        if (_receivedStr.IndexOf("<FILELIST>") >= 0)
+                        {
+                            sendFileList(state);
+                            int eofEnd = _receivedStr.IndexOf("<EOF>") + 4;
+                            _receivedStr = _receivedStr.Remove(0, eofEnd);
+                        }
+
+
+
+
+                    }
                 }
-                else
-                {
-                    Console.WriteLine("Server EndConnection.");
-                    state.EndConnection();
-                }
-                //If read fails then close connection
+                else state.EndConnection(); //If read fails then close connection
             }
         }
 
-        public void getFileForSendingToClient(ConnectionState state)
+        private void getFileForSendingToClient(String filename)
         {
-            String filePath = "Files\\" + _getfileName;
+            Stream stream = fileTransferClnt.GetStream();
+            byte[] buffer = new byte[1024];
+
+            String filePath = "Files\\" + filename;
             Console.WriteLine("Server sending client file: " + filePath);
+            
+            String header = "<FILENAME>" + filename + "</FILENAME>";
+            stream.Write(Encoding.UTF8.GetBytes(header), 0, header.Length);
+
             using (Stream source = File.OpenRead(filePath))
             {
-                byte[] buffer = new byte[1024];
+                buffer = new byte[1024];
                 int bytesRead;
                 while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    state.Write(buffer, 0, bytesRead);
+                    stream.Write(buffer, 0, bytesRead);
                 }
             }
+
+            stream.Write(Encoding.UTF8.GetBytes("<EOF>"), 0, 5);
         }
 
-        public void saveFileSentFromClient()
+        
+
+        private void sendFileList(ConnectionState state)
         {
-            String filePath = "Files\\" + _sendfileName;
-            Console.WriteLine("Server saving file from client: " + filePath);
+            
+            Stream stream = filelistclnt.GetStream();
 
-            File.WriteAllText(filePath, _receiveFile);
+            DirectoryInfo d = new DirectoryInfo("Files");//Assuming Test is your Folder
+            FileInfo[] Files = d.GetFiles("*"); //Getting Text files
+            string str = "";
+            foreach (FileInfo file in Files)
+            {
+                str = str + "," + file.Name;
+            }
+            str = str.Remove(0, 1);
+            try
+            {
+                String header = "<FILELIST>" + str + "</FILELIST>";
+                stream.Write(Encoding.UTF8.GetBytes(header), 0, header.Length);
+                stream.Write(Encoding.UTF8.GetBytes("<EOF>"), 0, 5);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error..... " + e.StackTrace);
+            }
+
+            //tcpclnt.Close();
         }
-
-
 
 
         public override void OnDropConnection(ConnectionState state)

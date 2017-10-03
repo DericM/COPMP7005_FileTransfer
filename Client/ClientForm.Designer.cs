@@ -33,15 +33,16 @@
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.labelUploadPath = new System.Windows.Forms.Label();
             this.groupBoxConnection = new System.Windows.Forms.GroupBox();
-            this.groupBoxUpload = new System.Windows.Forms.GroupBox();
-            this.buttonBrowse = new System.Windows.Forms.Button();
-            this.maskedTextBoxPort = new System.Windows.Forms.MaskedTextBox();
-            this.labelIPAddress = new System.Windows.Forms.Label();
             this.labelPort = new System.Windows.Forms.Label();
-            this.groupBoxDownload = new System.Windows.Forms.GroupBox();
-            this.listBoxServerFiles = new System.Windows.Forms.ListBox();
+            this.labelIPAddress = new System.Windows.Forms.Label();
+            this.maskedTextBoxPort = new System.Windows.Forms.MaskedTextBox();
+            this.groupBoxUpload = new System.Windows.Forms.GroupBox();
             this.buttonUpload = new System.Windows.Forms.Button();
+            this.buttonBrowse = new System.Windows.Forms.Button();
+            this.groupBoxDownload = new System.Windows.Forms.GroupBox();
             this.buttonDownload = new System.Windows.Forms.Button();
+            this.listBoxServerFiles = new System.Windows.Forms.ListBox();
+            this.buttonRefresh = new System.Windows.Forms.Button();
             this.groupBoxConnection.SuspendLayout();
             this.groupBoxUpload.SuspendLayout();
             this.groupBoxDownload.SuspendLayout();
@@ -93,6 +94,33 @@
             this.groupBoxConnection.TabStop = false;
             this.groupBoxConnection.Text = "Server Info";
             // 
+            // labelPort
+            // 
+            this.labelPort.AutoSize = true;
+            this.labelPort.Location = new System.Drawing.Point(154, 22);
+            this.labelPort.Name = "labelPort";
+            this.labelPort.Size = new System.Drawing.Size(26, 13);
+            this.labelPort.TabIndex = 5;
+            this.labelPort.Text = "Port";
+            // 
+            // labelIPAddress
+            // 
+            this.labelIPAddress.AutoSize = true;
+            this.labelIPAddress.Location = new System.Drawing.Point(6, 22);
+            this.labelIPAddress.Name = "labelIPAddress";
+            this.labelIPAddress.Size = new System.Drawing.Size(58, 13);
+            this.labelIPAddress.TabIndex = 3;
+            this.labelIPAddress.Text = "IP Address";
+            // 
+            // maskedTextBoxPort
+            // 
+            this.maskedTextBoxPort.Enabled = false;
+            this.maskedTextBoxPort.Location = new System.Drawing.Point(182, 19);
+            this.maskedTextBoxPort.Name = "maskedTextBoxPort";
+            this.maskedTextBoxPort.Size = new System.Drawing.Size(50, 20);
+            this.maskedTextBoxPort.TabIndex = 2;
+            this.maskedTextBoxPort.Text = "7005";
+            // 
             // groupBoxUpload
             // 
             this.groupBoxUpload.Controls.Add(this.buttonUpload);
@@ -105,6 +133,17 @@
             this.groupBoxUpload.TabStop = false;
             this.groupBoxUpload.Text = "File Upload";
             // 
+            // buttonUpload
+            // 
+            this.buttonUpload.Enabled = false;
+            this.buttonUpload.Location = new System.Drawing.Point(237, 19);
+            this.buttonUpload.Name = "buttonUpload";
+            this.buttonUpload.Size = new System.Drawing.Size(75, 23);
+            this.buttonUpload.TabIndex = 4;
+            this.buttonUpload.Text = "Upload";
+            this.buttonUpload.UseVisualStyleBackColor = true;
+            this.buttonUpload.Click += new System.EventHandler(this.buttonUpload_Click);
+            // 
             // buttonBrowse
             // 
             this.buttonBrowse.Enabled = false;
@@ -116,34 +155,9 @@
             this.buttonBrowse.UseVisualStyleBackColor = true;
             this.buttonBrowse.Click += new System.EventHandler(this.buttonBrowse_Click);
             // 
-            // maskedTextBoxPort
-            // 
-            this.maskedTextBoxPort.Location = new System.Drawing.Point(182, 19);
-            this.maskedTextBoxPort.Name = "maskedTextBoxPort";
-            this.maskedTextBoxPort.Size = new System.Drawing.Size(50, 20);
-            this.maskedTextBoxPort.TabIndex = 2;
-            this.maskedTextBoxPort.Text = "7005";
-            // 
-            // labelIPAddress
-            // 
-            this.labelIPAddress.AutoSize = true;
-            this.labelIPAddress.Location = new System.Drawing.Point(6, 22);
-            this.labelIPAddress.Name = "labelIPAddress";
-            this.labelIPAddress.Size = new System.Drawing.Size(58, 13);
-            this.labelIPAddress.TabIndex = 3;
-            this.labelIPAddress.Text = "IP Address";
-            // 
-            // labelPort
-            // 
-            this.labelPort.AutoSize = true;
-            this.labelPort.Location = new System.Drawing.Point(154, 22);
-            this.labelPort.Name = "labelPort";
-            this.labelPort.Size = new System.Drawing.Size(26, 13);
-            this.labelPort.TabIndex = 5;
-            this.labelPort.Text = "Port";
-            // 
             // groupBoxDownload
             // 
+            this.groupBoxDownload.Controls.Add(this.buttonRefresh);
             this.groupBoxDownload.Controls.Add(this.buttonDownload);
             this.groupBoxDownload.Controls.Add(this.listBoxServerFiles);
             this.groupBoxDownload.Location = new System.Drawing.Point(13, 140);
@@ -152,6 +166,17 @@
             this.groupBoxDownload.TabIndex = 5;
             this.groupBoxDownload.TabStop = false;
             this.groupBoxDownload.Text = "File Download";
+            // 
+            // buttonDownload
+            // 
+            this.buttonDownload.Enabled = false;
+            this.buttonDownload.Location = new System.Drawing.Point(236, 19);
+            this.buttonDownload.Name = "buttonDownload";
+            this.buttonDownload.Size = new System.Drawing.Size(75, 23);
+            this.buttonDownload.TabIndex = 1;
+            this.buttonDownload.Text = "Download";
+            this.buttonDownload.UseVisualStyleBackColor = true;
+            this.buttonDownload.Click += new System.EventHandler(this.buttonDownload_Click);
             // 
             // listBoxServerFiles
             // 
@@ -165,27 +190,15 @@
             this.listBoxServerFiles.TabIndex = 0;
             this.listBoxServerFiles.SelectedIndexChanged += new System.EventHandler(this.listBoxServerFiles_SelectedIndexChanged);
             // 
-            // buttonUpload
+            // buttonRefresh
             // 
-            this.buttonUpload.Enabled = false;
-            this.buttonUpload.Location = new System.Drawing.Point(237, 19);
-            this.buttonUpload.Name = "buttonUpload";
-            this.buttonUpload.Size = new System.Drawing.Size(75, 23);
-            this.buttonUpload.TabIndex = 4;
-            this.buttonUpload.Text = "Upload";
-            this.buttonUpload.UseVisualStyleBackColor = true;
-            this.buttonUpload.Click += new System.EventHandler(this.buttonUpload_Click);
-            // 
-            // buttonDownload
-            // 
-            this.buttonDownload.Enabled = false;
-            this.buttonDownload.Location = new System.Drawing.Point(236, 19);
-            this.buttonDownload.Name = "buttonDownload";
-            this.buttonDownload.Size = new System.Drawing.Size(75, 23);
-            this.buttonDownload.TabIndex = 1;
-            this.buttonDownload.Text = "Download";
-            this.buttonDownload.UseVisualStyleBackColor = true;
-            this.buttonDownload.Click += new System.EventHandler(this.buttonDownload_Click);
+            this.buttonRefresh.Location = new System.Drawing.Point(236, 48);
+            this.buttonRefresh.Name = "buttonRefresh";
+            this.buttonRefresh.Size = new System.Drawing.Size(75, 23);
+            this.buttonRefresh.TabIndex = 2;
+            this.buttonRefresh.Text = "Refresh";
+            this.buttonRefresh.UseVisualStyleBackColor = true;
+            this.buttonRefresh.Click += new System.EventHandler(this.buttonRefresh_Click);
             // 
             // ClientForm
             // 
@@ -197,6 +210,8 @@
             this.Controls.Add(this.groupBoxConnection);
             this.Name = "ClientForm";
             this.Text = "Client";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ClientForm_FormClosed);
+            this.Load += new System.EventHandler(this.ClientForm_Load);
             this.groupBoxConnection.ResumeLayout(false);
             this.groupBoxConnection.PerformLayout();
             this.groupBoxUpload.ResumeLayout(false);
@@ -222,6 +237,7 @@
         private System.Windows.Forms.GroupBox groupBoxDownload;
         private System.Windows.Forms.Button buttonDownload;
         private System.Windows.Forms.ListBox listBoxServerFiles;
+        private System.Windows.Forms.Button buttonRefresh;
     }
 }
 

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace Server
 {
@@ -18,19 +19,38 @@ namespace Server
             InitializeComponent();
         }
 
-        private TcpServer Servidor;
-        private FileServer Provider;
+        private static TcpServer FSServidor;
+        private FileServer FSProvider;
+
+        private static TcpServer FRServidor;
+        private FileReceiver FRProvider;
 
         private void ServerForm_Load(object sender, EventArgs e)
         {
-            Provider = new FileServer();
-            Servidor = new TcpServer(Provider, 7005);
-            Servidor.Start();
+            Thread FSThread = new Thread(FileServerThread);
+            Thread FRThread = new Thread(FileReceiverThread);
+            FSThread.Start();
+            FRThread.Start();
+        }
+
+        private void FileServerThread()
+        {
+            FSProvider = new FileServer();
+            FSServidor = new TcpServer(FSProvider, 7005);
+            FSServidor.Start();
+        }
+
+        private void FileReceiverThread()
+        {
+            FRProvider = new FileReceiver();
+            FRServidor = new TcpServer(FRProvider, 7004);
+            FRServidor.Start();
         }
 
         private void ServerForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Servidor.Stop();
+            FSServidor.Stop();
+            FRServidor.Stop();
         }
     }
 }
