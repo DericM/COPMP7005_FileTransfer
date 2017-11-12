@@ -104,7 +104,10 @@ namespace Client
         {
             FRServidor.Stop();
             LRServidor.Stop();
-            client.disconnect();
+            if(client != null)
+            {
+                client.disconnect();
+            }
         }
 
         public void updateList(String files)

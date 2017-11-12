@@ -129,9 +129,8 @@ namespace Server
             str = str.Remove(0, 1);
             try
             {
-                String header = "<FILELIST>" + str + "</FILELIST>";
+                String header = "<FILELIST>" + str + "</FILELIST><EOF>";
                 stream.Write(Encoding.UTF8.GetBytes(header), 0, header.Length);
-                stream.Write(Encoding.UTF8.GetBytes("<EOF>"), 0, 5);
             }
             catch (Exception e)
             {
